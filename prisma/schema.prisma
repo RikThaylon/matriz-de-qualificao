@@ -1,13 +1,119 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
 
-enum MachineState { APTA ATENCAO BLOQUEADA PARADA }
-enum AllocationStatus { APROVADA APROVADA_COM_ATENCAO BLOQUEADA ENCERRADA }
-model Sector { id String @id @default(cuid()) name String description String? layout Json status String @default("ATIVO") machines Machine[] createdAt DateTime @default(now()) updatedAt DateTime @updatedAt }
-model Machine { id String @id @default(cuid()) sectorId String sector Sector @relation(fields:[sectorId],references:[id],onDelete:Cascade) name String code String @unique type String x Float y Float width Float @default(175) height Float @default(105) rotation Float @default(0) state MachineState @default(PARADA) capacity Int @default(1) requirements MachineRequirement[] allocations Allocation[] version Int @default(1) }
-model MachineRequirement { id String @id @default(cuid()) machineId String machine Machine @relation(fields:[machineId],references:[id],onDelete:Cascade) competence String minimumLevel Int weight Int @default(1) critical Boolean @default(false) }
-model Person { id String @id @default(cuid()) name String employeeId String @unique avatar String? shift String originSector String? available Boolean @default(true) status String @default("ATIVO") qualifications Qualification[] allocations Allocation[] }
-model Qualification { id String @id @default(cuid()) personId String person Person @relation(fields:[personId],references:[id],onDelete:Cascade) competence String level Int expiresAt DateTime? evidence String? status String @default("VALIDA") @@unique([personId,competence]) }
-model Allocation { id String @id @default(cuid()) personId String person Person @relation(fields:[personId],references:[id]) machineId String machine Machine @relation(fields:[machineId],references:[id]) startedAt DateTime @default(now()) endedAt DateTime? status AllocationStatus adherence Float justification String? }
-model OperationalEvent { id String @id @default(cuid()) sectorId String eventType String payload Json createdAt DateTime @default(now()) }
-model Insight { id String @id @default(cuid()) sectorId String indicator String criticality String recommendation String period String createdAt DateTime @default(now()) }
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MachineState {
+  APTA
+  ATENCAO
+  BLOQUEADA
+  PARADA
+}
+
+enum AllocationStatus {
+  APROVADA
+  APROVADA_COM_ATENCAO
+  BLOQUEADA
+  ENCERRADA
+}
+
+model Sector {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  layout      Json
+  status      String    @default("ATIVO")
+  machines    Machine[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Machine {
+  id           String               @id @default(cuid())
+  sectorId     String
+  sector       Sector               @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+  name         String
+  code         String               @unique
+  type         String
+  x            Float
+  y            Float
+  width        Float                @default(175)
+  height       Float                @default(105)
+  rotation     Float                @default(0)
+  state        MachineState         @default(PARADA)
+  capacity     Int                  @default(1)
+  requirements MachineRequirement[]
+  allocations  Allocation[]
+  version      Int                  @default(1)
+}
+
+model MachineRequirement {
+  id           String  @id @default(cuid())
+  machineId    String
+  machine      Machine @relation(fields: [machineId], references: [id], onDelete: Cascade)
+  competence   String
+  minimumLevel Int
+  weight       Int     @default(1)
+  critical     Boolean @default(false)
+}
+
+model Person {
+  id           String          @id @default(cuid())
+  name         String
+  employeeId   String          @unique
+  avatar       String?
+  shift        String
+  originSector String?
+  available    Boolean         @default(true)
+  status       String          @default("ATIVO")
+  qualifications Qualification[]
+  allocations  Allocation[]
+}
+
+model Qualification {
+  id         String   @id @default(cuid())
+  personId   String
+  person     Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  competence String
+  level      Int
+  expiresAt  DateTime?
+  evidence   String?
+  status     String   @default("VALIDA")
+
+  @@unique([personId, competence])
+}
+
+model Allocation {
+  id            String           @id @default(cuid())
+  personId      String
+  person        Person           @relation(fields: [personId], references: [id])
+  machineId     String
+  machine       Machine          @relation(fields: [machineId], references: [id])
+  startedAt     DateTime         @default(now())
+  endedAt       DateTime?
+  status        AllocationStatus
+  adherence     Float
+  justification String?
+}
+
+model OperationalEvent {
+  id        String   @id @default(cuid())
+  sectorId  String
+  eventType String
+  payload   Json
+  createdAt DateTime @default(now())
+}
+
+model Insight {
+  id             String   @id @default(cuid())
+  sectorId       String
+  indicator      String
+  criticality    String
+  recommendation String
+  period         String
+  createdAt      DateTime @default(now())
+}

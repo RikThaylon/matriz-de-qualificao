@@ -74,7 +74,7 @@ function App() {
     const state: State = score === 100 ? 'apto' : 'atencao'
     setMachines(prev => prev.map(x => x.id === m.id ? { ...x, operator: p.name, score, state } : x))
     setSelected(m.id)
-    setNotice({ status, title: state === 'apto' ? 'ALOCação APROVADA' : 'ALOCação COM ATENÇÃO', text: state === 'apto' ? `${p.name} está plenamente qualificada para operar.` : `${p.name} pode operar. Certificação complementar vence em breve.` })
+    setNotice({ status: state, title: state === 'apto' ? 'ALOCação APROVADA' : 'ALOCação COM ATENÇÃO', text: state === 'apto' ? `${p.name} está plenamente qualificada para operar.` : `${p.name} pode operar. Certificação complementar vence em breve.` })
   }
   function addMachine() { const n = machines.length + 1; const item: Machine = { id: `new-${Date.now()}`, code: `MQ-${String(n).padStart(2, '0')}`, name: 'Nova máquina', type: 'Genérica', x: 68, y: 66, state: 'vazio' }; setMachines([...machines, item]); setSelected(item.id) }
 
