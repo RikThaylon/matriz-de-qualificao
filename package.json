@@ -1,6 +1,7 @@
 {
   "name": "matriz-qualificacao-operacional",
   "private": true,
+  "engines": { "node": ">=20 <23" },
   "workspaces": ["apps/*"],
   "scripts": {
     "dev": "npm run dev -w @matriz/web",
