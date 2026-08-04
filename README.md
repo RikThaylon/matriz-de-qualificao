@@ -24,16 +24,24 @@ Em seguida, abra `http://localhost:5173`. O frontend pode ser executado de forma
 
 Este projeto não usa Blueprint nem `render.yaml`. Crie os serviços no painel do Render. O banco PostgreSQL é o Neon; o Render hospeda somente a API, o site estático e, para tempo real distribuído, o Redis.
 
-### 1. Prepare as URLs do Neon
+### 1. Prepare a URL do Neon
 
-No botão **Connect** do projeto Neon, copie duas URLs, sempre com `sslmode=require`:
+No botão **Connect** do projeto Neon, mantenha o botão **Connection pooling** ligado, como na tela mostrada, e copie a URL exibida. Ela deve conter `-pooler` e `sslmode=require`.
 
-- **Pooled connection** → `DATABASE_URL` (a API em execução).
-- **Direct connection** → `DIRECT_URL` (Prisma e mudanças de schema).
+- **Pooled connection** → `DATABASE_URL`.
 
-Não coloque essas URLs no GitHub. Elas entram somente como variáveis de ambiente no Render.
+Não coloque essa URL no GitHub. Ela entra somente como variável de ambiente no Render.
 
-### 2. Crie o Web Service da API
+### 2. Crie as tabelas no Neon
+
+Como o plano Free do Render não oferece comando de pre-deploy, a primeira criação do schema deve ser feita no Neon:
+
+1. Abra **SQL Editor** no menu do Neon e crie uma nova consulta.
+2. Abra [`prisma/migrations/0001_init/migration.sql`](prisma/migrations/0001_init/migration.sql) neste repositório.
+3. Copie todo o conteúdo, cole no editor e clique em **Run**.
+4. Acesse **Tables** e confirme que as tabelas `Sector`, `Machine`, `Person` e `Allocation` foram criadas.
+
+### 3. Crie o Web Service da API
 
 No Render, acesse **New → Web Service**, conecte `RikThaylon/matriz-de-qualificao` e preencha:
 
@@ -43,10 +51,9 @@ No Render, acesse **New → Web Service**, conecte `RikThaylon/matriz-de-qualifi
 | Runtime | `Node` |
 | Root Directory | *(vazio — a API também usa o schema Prisma na raiz do repositório)* |
 | Build Command | `npm install && npx prisma generate && npm run build -w @matriz/api` |
-| Pre-Deploy Command | `npx prisma db push` |
 | Start Command | `npm run start:prod -w @matriz/api` |
 | Health Check Path | `/v1/health` |
-| Plan | `Starter` ou superior |
+| Plan | `Free` |
 
 Em **Environment**, adicione:
 
@@ -55,14 +62,10 @@ Em **Environment**, adicione:
 | `NODE_ENV` | `production` |
 | `PORT` | `10000` |
 | `DATABASE_URL` | URL **pooled** do Neon |
-| `DIRECT_URL` | URL **direct** do Neon |
-| `REDIS_URL` | URL interna do Render Key Value, quando criado no passo 4 |
-
-O pre-deploy aplica o schema Prisma antes de colocar a nova API no ar. Esse recurso é disponível nos planos pagos de Web Service; se escolher um plano sem pre-deploy, execute `npx prisma db push` uma vez a partir de uma máquina com as duas URLs do Neon configuradas.
 
 Após o deploy, confirme `https://<sua-api>.onrender.com/v1/health`; a resposta deve ser `{ "status": "ok" }`.
 
-### 3. Crie o Static Site do frontend
+### 4. Crie o Static Site do frontend
 
 No Render, acesse **New → Static Site**, escolha o mesmo repositório e preencha:
 
@@ -77,11 +80,11 @@ Em **Environment**, crie `VITE_API_URL` com a URL pública da API, por exemplo `
 
 Em **Redirects/Rewrites**, adicione uma regra de rewrite de `/*` para `/index.html` (status `200`) para manter a SPA funcional ao abrir rotas diretamente.
 
-### 4. Crie o Redis de tempo real
+### 5. Redis é opcional no piloto gratuito
 
-Para sustentar Socket.IO, presença e pub/sub em mais de uma instância, crie **New → Key Value** no Render. Use o mesmo ambiente/região da API, mantenha o acesso externo bloqueado e copie a **Internal Connection String** para `REDIS_URL` no Web Service. Em seguida, faça redeploy da API.
+Para uma única instância da API, não crie `REDIS_URL`: o piloto funciona sem Redis. Quando migrar para plano pago ou múltiplas instâncias, crie **New → Key Value** no Render e copie a **Internal Connection String** para `REDIS_URL` no Web Service.
 
-O Neon substitui apenas o PostgreSQL — ele não substitui Redis. A API continua funcionando sem `REDIS_URL` para demonstração em uma instância, mas o Redis é necessário para a arquitetura de tempo real distribuída.
+O Neon substitui apenas o PostgreSQL — ele não substitui Redis. A API continua funcionando sem `REDIS_URL` para demonstração em uma instância, mas o Redis é necessário para a arquitetura de tempo real distribuída. Serviços Free podem hibernar após inatividade; a primeira abertura posterior pode demorar cerca de um minuto e clientes Socket.IO devem reconectar automaticamente.
 
 ## Estrutura
 

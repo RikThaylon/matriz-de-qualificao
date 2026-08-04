@@ -1,0 +1,41 @@
+CREATE TYPE "MachineState" AS ENUM ('APTA', 'ATENCAO', 'BLOQUEADA', 'PARADA');
+CREATE TYPE "AllocationStatus" AS ENUM ('APROVADA', 'APROVADA_COM_ATENCAO', 'BLOQUEADA', 'ENCERRADA');
+
+CREATE TABLE "Sector" (
+  "id" TEXT PRIMARY KEY, "name" TEXT NOT NULL, "description" TEXT, "layout" JSONB NOT NULL,
+  "status" TEXT NOT NULL DEFAULT 'ATIVO', "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL
+);
+CREATE TABLE "Machine" (
+  "id" TEXT PRIMARY KEY, "sectorId" TEXT NOT NULL REFERENCES "Sector"("id") ON DELETE CASCADE,
+  "name" TEXT NOT NULL, "code" TEXT NOT NULL UNIQUE, "type" TEXT NOT NULL, "x" DOUBLE PRECISION NOT NULL,
+  "y" DOUBLE PRECISION NOT NULL, "width" DOUBLE PRECISION NOT NULL DEFAULT 175, "height" DOUBLE PRECISION NOT NULL DEFAULT 105,
+  "rotation" DOUBLE PRECISION NOT NULL DEFAULT 0, "state" "MachineState" NOT NULL DEFAULT 'PARADA',
+  "capacity" INTEGER NOT NULL DEFAULT 1, "version" INTEGER NOT NULL DEFAULT 1
+);
+CREATE TABLE "MachineRequirement" (
+  "id" TEXT PRIMARY KEY, "machineId" TEXT NOT NULL REFERENCES "Machine"("id") ON DELETE CASCADE,
+  "competence" TEXT NOT NULL, "minimumLevel" INTEGER NOT NULL, "weight" INTEGER NOT NULL DEFAULT 1, "critical" BOOLEAN NOT NULL DEFAULT false
+);
+CREATE TABLE "Person" (
+  "id" TEXT PRIMARY KEY, "name" TEXT NOT NULL, "employeeId" TEXT NOT NULL UNIQUE, "avatar" TEXT,
+  "shift" TEXT NOT NULL, "originSector" TEXT, "available" BOOLEAN NOT NULL DEFAULT true, "status" TEXT NOT NULL DEFAULT 'ATIVO'
+);
+CREATE TABLE "Qualification" (
+  "id" TEXT PRIMARY KEY, "personId" TEXT NOT NULL REFERENCES "Person"("id") ON DELETE CASCADE,
+  "competence" TEXT NOT NULL, "level" INTEGER NOT NULL, "expiresAt" TIMESTAMP(3), "evidence" TEXT,
+  "status" TEXT NOT NULL DEFAULT 'VALIDA', CONSTRAINT "Qualification_personId_competence_key" UNIQUE ("personId", "competence")
+);
+CREATE TABLE "Allocation" (
+  "id" TEXT PRIMARY KEY, "personId" TEXT NOT NULL REFERENCES "Person"("id"), "machineId" TEXT NOT NULL REFERENCES "Machine"("id"),
+  "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "endedAt" TIMESTAMP(3),
+  "status" "AllocationStatus" NOT NULL, "adherence" DOUBLE PRECISION NOT NULL, "justification" TEXT
+);
+CREATE TABLE "OperationalEvent" (
+  "id" TEXT PRIMARY KEY, "sectorId" TEXT NOT NULL, "eventType" TEXT NOT NULL, "payload" JSONB NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE "Insight" (
+  "id" TEXT PRIMARY KEY, "sectorId" TEXT NOT NULL, "indicator" TEXT NOT NULL, "criticality" TEXT NOT NULL,
+  "recommendation" TEXT NOT NULL, "period" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
