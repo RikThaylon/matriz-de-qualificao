@@ -50,7 +50,7 @@ No Render, acesse **New → Web Service**, conecte `RikThaylon/matriz-de-qualifi
 | Branch | `main` |
 | Runtime | `Node` |
 | Root Directory | *(vazio — a API também usa o schema Prisma na raiz do repositório)* |
-| Build Command | `npm install --include=dev && npx prisma generate && npm run build -w @matriz/api` |
+| Build Command | `npm install && npx prisma generate && npm run build -w @matriz/api` |
 | Start Command | `npm run start:prod -w @matriz/api` |
 | Health Check Path | `/v1/health` |
 | Plan | `Free` |
