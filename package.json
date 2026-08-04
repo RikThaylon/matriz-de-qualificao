@@ -1,0 +1,10 @@
+{
+  "name": "matriz-qualificacao-operacional",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "npm run dev -w @matriz/web",
+    "build": "npm run build -w @matriz/web",
+    "test": "npm run test -w @matriz/api"
+  }
+}
